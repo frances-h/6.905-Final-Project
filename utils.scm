@@ -4,33 +4,31 @@ generate-initial-weights
 vector:+
 vector:dot
 transpose
-|# 
+|#
 
 ;;; generate randomized weights in the range of -1/(sqrt num-cells) to 1/(sqrt num-cells) (uniform)
 ;;; Might add optional argument later to specify different distribution types
 (define (generate-normalized-random num-cells)
-  (+ (/ (* 2.0 (random 1000)) (* (sqrt num-cells) 1000))
+  (+ (/ (* 2 (random 1000)) (* (sqrt num-cells) 1000))
      (/ -1 (sqrt num-cells))))
-  
+
 (define (generate-initial-weights input-size output-size)
-  (let ((weights (make-vector input-size)))
-    (let x-loop ((i 0)
-		 (x (make-vector output-size)))
+  (let ((weights (generate-empty-matrix input-size output-size)))
+    (let x-loop ((i 0))
       (if (= i input-size) weights
 	  (begin
 	    (let y-loop ((j 0))
 	      (if (= j output-size) #t
 		  (begin
-		    (vector-set! x j (generate-normalized-random input-size))
+		    (vector-set! (vector-ref weights i)
+				 j
+				 (generate-normalized-random input-size))
 		    (y-loop (+ j 1)))))
-	      (vector-set! weights i x)
-	      (x-loop (+ 1 i)
-		      (make-vector output-size)))))
+	    (x-loop (+ 1 i)))))
     weights))
 
 
 #| VECTOR OPERATIONS |#
-
 (define (vector:dot a b)
   ;;; assert a and b equal length
   (fold-left + 0
@@ -41,9 +39,8 @@ transpose
 (define (vector:+ a b)
   (vector-map (lambda (x y) (+ x y)) a b))
 
+
 #| MATRIX OPERATIONS |#
-
-
 (define (generate-empty-matrix num-rows num-cols)
   (make-initialized-vector num-rows (lambda (x) (make-vector num-cols))))
 
@@ -78,11 +75,8 @@ transpose
 					     row-index))
 		    (row-loop (+ 1 row-index)))))
 	    (col-loop (+ 1 col-vector-index)))))
-    transposed-vector))  
+    transposed-vector))
 
- ;;; add assert that verifies that len col a = len row b for every col in a and row in b
-  ;;; num-rows = (vector-length (vector-first a))
-  ;;; num-cols = (vector-length b)
 (define (matrix:* a b)
   (let ((dot-product (generate-empty-matrix (vector-length a)
 					    (vector-length (vector-first b)))))
@@ -101,7 +95,7 @@ transpose
 	    (b-col-loop (+ 1 col-index-b)))))
     dot-product))
 
-(define (matrix:+ a b) ;;2d matrix
+(define (matrix:+ a b)
   ;;; assert shape of a = shape of b
   (let ((sum (make-vector (vector-length a))))
     (let row-loop ((row-index 0))
@@ -110,6 +104,6 @@ transpose
 	    (vector-set! sum
 			 row-index
 			 (vector:+ (vector-ref a row-index)
-				   (vector-ref b row-index))) 
+				   (vector-ref b row-index)))
 	    (row-loop (+ 1 row-index)))))
     sum))

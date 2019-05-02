@@ -13,12 +13,11 @@
 (define (make-fully-connected input-size output-size use-bias)
   (let ((weights (generate-initial-weights input-size output-size))
 	(bias (generate-initial-weights 1 output-size)))
-    ;;;TODO: define generate-initial-weights --> generates multi-layer vectors
-    
+
     (define (forward inputs)
       (if use-bias
-	  (vector:+ (vector:dot inputs (transpose weights)) bias)
-	  (vector:dot inputs (transpose weights))))
+	  (matrix:+ (vector:dot inputs (transpose weights)) bias)
+	  (matrix:* inputs (transpose weights))))
 
     (define (update-weights! new-weights)
       (set! weights new-weights))
@@ -27,6 +26,3 @@
       (set! bias new-bias))
 
     (bundle layer? forward update-weights! update-bias!)))
-
-
-

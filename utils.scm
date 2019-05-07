@@ -157,3 +157,6 @@ transpose
 				   ))
 	    (row-loop (+ 1 row-index)))))
     sum))
+
+(define (bypass x)
+	x)

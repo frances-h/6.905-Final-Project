@@ -1,11 +1,3 @@
-;;; utils to define:
-#|
-generate-initial-weights
-vector:+
-vector:dot
-transpose
-|#
-
 ;;; generate randomized weights in the range of -1/(sqrt num-cells) to 1/(sqrt num-cells) (uniform)
 ;;; Might add optional argument later to specify different distribution types
 (define (generate-normalized-random num-cells)
@@ -188,7 +180,7 @@ transpose
 				  (layer-sum 0))
 	      (if (= in-index (vector-length input))
 		  (vector-set! output out-index layer-sum)
-		  (in-channel-loop (+ 1 in-index) 
+		  (in-channel-loop (+ 1 in-index)
 				   (matrix:+ layer-sum
 					     (simple-convolve-2d
 					      (vector-ref input in-index)
@@ -200,59 +192,55 @@ transpose
 	    (out-channel-loop (+ 1 out-index)))))
     output))
 
+(define (vector:element_mul a b)
+  (vector-map (lambda (x y ) ( * x y)) a b))
 
-(define test-input (vector
-		    #(#(0 0 0 0 0 0 0)
-		      #(0 0 1 0 0 1 0)
-		      #(0 1 2 1 0 2 0)
-		      #(0 1 1 2 1 1 0)
-		      #(0 1 0 0 1 1 0)
-		      #(0 1 1 0 0 1 0)
-		      #(0 0 0 0 0 0 0))
-		    #(#(0 0 0 0 0 0 0)
-		      #(0 2 0 0 1 2 0)
-		      #(0 0 1 1 2 0 0)
-		      #(0 2 1 0 0 1 0)
-		      #(0 0 2 2 0 2 0)
-		      #(0 2 1 1 0 0 0)
-		      #(0 0 0 0 0 0 0))
-		    #(#(0 0 0 0 0 0 0)
-		      #(0 0 2 1 0 1 0)
-		      #(0 1 0 0 1 1 0)
-		      #(0 2 2 1 2 0 0)
-		      #(0 0 1 1 0 1 0)
-		      #(0 0 0 1 0 0 0)
-		      #(0 0 0 0 0 0 0))))
+(define (matrix:element_mul a b)
+  ;;; assert shape of a = shape of b
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:+ (vector-ref a row-index)
+				   (vector-ref b row-index)))
+	    (row-loop (+ 1 row-index)))))
+    sum))
 
-(define filters (list
-		 #(#(#(-1 0 -1)
-		     #(-1 1 -1)
-		     #(-1 0 1))
-		   #(#(0 1 1)
-		     #(0 1 0)
-		     #(0 1 0))
-		   #(#(1 -1 1)
-		     #(0 1 1)
-		     #(-1 0 1)))
-		 #(#(#(1 0 -1)
-		     #(1 -1 -1)
-		     #(1 -1 -1))
-		   #(#(-1 1 0)
-		     #(-1 1 0)
-		     #(-1 -1 -1))
-		   #(#(1 -1 0)
-		     #(0 -1 1)
-		     #(-1 -1 1)))))
+(define (vector:- a b)
+  (vector-map (lambda (x y ) ( - x y)) a b))
 
-(define bias (vector
-	      #(#(1 1 1)
-		#(1 1 1)
-		#(1 1 1))
-	      #(#(0 0 0)
-		#(0 0 0)
-		#(0 0 0))))
-		
+(define (matrix:- a b)
+  ;;; assert shape of a = shape of b
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:- (vector-ref a row-index)
+				   (vector-ref b row-index)))
+	    (row-loop (+ 1 row-index)))))
+    sum))
 
-		     
-		   
-		   
+(define (sigmoid x)
+	(/ (exp x) (+ 1 (exp x))))
+
+(define (vector:sigmoid a)
+  (vector-map (lambda (x) (sigmoid x )) a ))
+
+(define (matrix:sigmoid a)
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:sigmoid (vector-ref a row-index)
+				   ))
+	    (row-loop (+ 1 row-index)))))
+    sum))
+
+(define (bypass x)
+	x)

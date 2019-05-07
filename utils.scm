@@ -107,3 +107,53 @@ transpose
 				   (vector-ref b row-index)))
 	    (row-loop (+ 1 row-index)))))
     sum))
+
+(define (vector:element_mul a b)
+  (vector-map (lambda (x y ) ( * x y)) a b))
+
+(define (matrix:element_mul a b)
+  ;;; assert shape of a = shape of b
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:+ (vector-ref a row-index)
+				   (vector-ref b row-index)))
+	    (row-loop (+ 1 row-index)))))
+    sum))
+
+(define (vector:- a b)
+  (vector-map (lambda (x y ) ( - x y)) a b))
+
+(define (matrix:- a b)
+  ;;; assert shape of a = shape of b
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:- (vector-ref a row-index)
+				   (vector-ref b row-index)))
+	    (row-loop (+ 1 row-index)))))
+    sum))
+
+(define (sigmoid x)
+	(/ (exp x) (+ 1 (exp x))))
+
+(define (vector:sigmoid a)
+  (vector-map (lambda (x) (sigmoid x )) a ))
+
+(define (matrix:sigmoid a)
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:sigmoid (vector-ref a row-index)
+				   ))
+	    (row-loop (+ 1 row-index)))))
+    sum))

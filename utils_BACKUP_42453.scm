@@ -30,7 +30,6 @@
 
 (define (apply-filter filter submatrix)
   (fold-left + 0
-
 	     (map (lambda (x y) (* x y))
 		  (vector->list a)
 		  (vector->list b))))
@@ -204,7 +203,6 @@
 					      stride)))))
 	    (out-channel-loop (+ 1 out-index)))))
     output))
-
 
 (define (vector:element_mul a b)
   (vector-map (lambda (x y ) ( * x y)) a b))

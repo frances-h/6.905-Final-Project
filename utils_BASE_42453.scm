@@ -25,12 +25,13 @@
    (lambda (x)
      (make-initialized-vector in-channels
 			      (lambda (y)
-				(generate-initial-weights (first filter-size)
-							  (second filter-size)))))))
+				(generate-initial-weights filter-size
+							  filter-size)))))))
 
-(define (apply-filter filter submatrix)
+#| VECTOR OPERATIONS |#
+(define (vector:dot a b)
+  ;;; assert a and b equal length
   (fold-left + 0
-
 	     (map (lambda (x y) (* x y))
 		  (vector->list a)
 		  (vector->list b))))
@@ -107,11 +108,6 @@
 		  (vector->list b))))
 
 (define (matrix:* a b)
-  (if (number? a) (vector-map (lambda (x)
-				(vector-map (lambda (y)
-					      (* a y))
-					    x))
-			      b)
   (let ((dot-product (generate-matrix (vector-length a)
 				      (vector-length (vector-first b)))))
     (let b-col-loop ((col-index-b 0))
@@ -127,7 +123,7 @@
 					     (get-col-vector col-index-b b)))
 		    (a-row-loop (+ 1 row-index-a)))))
 	    (b-col-loop (+ 1 col-index-b)))))
-    dot-product)))
+    dot-product))
 
 (define (matrix:+ a b)
   ;;; assert shape of a = shape of b
@@ -148,44 +144,35 @@
 	sum)))
 
 
-
 #| Convolution things |#
+
 (define (simple-convolve-2d 2d-input filter filter-size stride)
-  (let* ((input-dims (get-matrix-dims 2d-input))
-	 (output-rows (+ 1 (/ (- (first input-dims) (first filter-size))
-			      (first stride))))
-	 (output-cols (+ 1 (/ (- (second input-dims) (second filter-size))
-			      (second stride))))
-	 (output (generate-matrix output-rows output-cols)))
-    (let row-loop ((row-index 0)
-		   (out-row-index 0))
-      (if (> row-index (- (first input-dims) (first filter-size))) #t
+  ;; assume squares :(
+  ;; assume filter size is odd (to find central pixel)
+  (let ((output (generate-matrix (+ 1 (/ (- (vector-length 2d-input)
+					    filter-size) stride))))
+	(initial-index (- (/ filter-size 2) 1/2)))
+    (let y-loop ((y-pos initial-index)
+		 (output-y-index 0))
+      (if (>= y-pos (- (vector-length 2d-input) initial-index)) #t
 	  (begin
-	    (let col-loop ((col-index 0)
-			   (out-col-index 0))
-	      (if (> col-index (- (second input-dims) (second filter-size))) #t
-		  (begin
-		    (vector-set! (vector-ref output out-row-index)
-				out-col-index
-				(apply-filter
-				 filter
-				 (matrix-ref 2d-input
-					     (list row-index
-						   (+ (first filter-size)
-						      row-index))
-					     (list col-index
-						   (+ (second filter-size)
-						      col-index)))))
-		    (col-loop (+ (second stride) col-index) (+ 1 out-col-index)))))
-	    (row-loop (+ (first stride) row-index) (+ 1 out-row-index)))))
-    output))			
+	    (let x-loop ((x-pos initial-index)
+			 (output-x-index 0))
+	      (begin
+		(if (>= x-pos (- (vector-length 2d-input) initial-index)) #t
+		    (begin
+		      (vector-set! (vector-ref output output-y-index)
+				   output-x-index
+				   (matrix:dot filter
+					       (get-submatrix 2d-input
+							   filter-size
+							   x-pos y-pos)))
+		      (x-loop (+ x-pos stride) (+ 1 output-x-index))))))
+	    (y-loop (+ y-pos stride) (+ 1 output-y-index)))))
+    output))
 
 (define (convolve-2d input weights num-filters filter-size stride)
-  (let* ((filter-size (if (number? filter-size)
-			  (list filter-size filter-size)
-			  filter-size))
-	 (stride (if (number? stride) (list stride stride) stride))
-	 (output (generate-matrix num-filters 1)))
+  (let ((output (generate-matrix num-filters 1)))
     (let out-channel-loop ((out-index 0))
       (if (= out-index num-filters) #t
 	  (begin
@@ -205,7 +192,6 @@
 	    (out-channel-loop (+ 1 out-index)))))
     output))
 
-
 (define (vector:element_mul a b)
   (vector-map (lambda (x y ) ( * x y)) a b))
 
@@ -217,7 +203,7 @@
 	  (begin
 	    (vector-set! sum
 			 row-index
-			 (vector:element_mul (vector-ref a row-index)
+			 (vector:+ (vector-ref a row-index)
 				   (vector-ref b row-index)))
 	    (row-loop (+ 1 row-index)))))
     sum))
@@ -238,18 +224,11 @@
 	    (row-loop (+ 1 row-index)))))
     sum))
 
-
 (define (sigmoid x)
 	(/ (exp x) (+ 1 (exp x))))
 
-(define (dir_sigmoid x)
-	(* (sigmoid x) (- 1 (sigmoid x))))
-
 (define (vector:sigmoid a)
   (vector-map (lambda (x) (sigmoid x )) a ))
-
-(define (vector:dir_sigmoid a)
-  (vector-map (lambda (x) (dir_sigmoid x )) a ))
 
 (define (matrix:sigmoid a)
   (let ((sum (make-vector (vector-length a))))
@@ -263,116 +242,5 @@
 	    (row-loop (+ 1 row-index)))))
     sum))
 
-(define (matrix:dir_sigmoid a)
-  (let ((sum (make-vector (vector-length a))))
-    (let row-loop ((row-index 0))
-      (if (= row-index (vector-length a)) #t
-	  (begin
-	    (vector-set! sum
-			 row-index
-			 (vector:dir_sigmoid (vector-ref a row-index)
-				   ))
-	    (row-loop (+ 1 row-index)))))
-    sum))
-
 (define (bypass x)
 	x)
-
-
-(define (d_squared-error targets outputs)
-	(matrix:- targets outputs))
-
-(define (matrix-shape A) 
-	(cons (vector-length A) (vector-length (vector-first A))))
-
-(define (ones x) 1)
-
-(define (vector:ones a)
-  (vector-map (lambda (x) (ones x )) a ))
-
-(define (matrix:ones a)
-  (let ((sum (make-vector (vector-length a))))
-    (let row-loop ((row-index 0))
-      (if (= row-index (vector-length a)) #t
-	  (begin
-	    (vector-set! sum
-			 row-index
-			 (vector:ones (vector-ref a row-index)
-				   ))
-	    (row-loop (+ 1 row-index)))))
-    sum))
-
-
-(define a #(#(0 1 1 1 0 0 0)
-	    #(0 0 1 1 1 0 0)
-	    #(0 0 0 1 1 1 0)
-	    #(0 0 0 1 1 0 0)
-	    #(0 0 1 1 0 0 0)
-	    #(0 1 1 0 0 0 0)
-	    #(1 1 0 0 0 0 0)))
-(define b #(#(1 0 1)
-	    #(0 1 0)
-	    #(1 0 1)))
-
-#(#(1 4 3 4 1)
-  #(1 2 4 3 3)
-  #(1 2 3 4 1)
-  #(1 3 3 1 1)
-  #(3 3 1 1 0)
-
-
-(define 2d-test #(#(0 0 0 0 0 0 0)
-		  #(0 0 1 0 0 1 0)
-		  #(0 1 2 1 0 2 0)
-		  #(0 1 1 2 1 1 0)
-		  #(0 1 0 0 1 1 0)
-		  #(0 1 1 0 0 1 0)
-		  #(0 0 0 0 0 0 0)))
-
-(define test-filter #(#(-1 0 -1)
-		      #(-1 1 -1)
-		      #(-1 0 1)))
-
-(define test-input (vector
-		    #(#(0 0 0 0 0 0 0)
-		      #(0 0 1 0 0 1 0)
-		      #(0 1 2 1 0 2 0)
-		      #(0 1 1 2 1 1 0)
-		      #(0 1 0 0 1 1 0)
-		      #(0 1 1 0 0 1 0)
-		      #(0 0 0 0 0 0 0))
-		    #(#(0 0 0 0 0 0 0)
-		      #(0 2 0 0 1 2 0)
-		      #(0 0 1 1 2 0 0)
-		      #(0 2 1 0 0 1 0)
-		      #(0 0 2 2 0 2 0)
-		      #(0 2 1 1 0 0 0)
-		      #(0 0 0 0 0 0 0))
-		    #(#(0 0 0 0 0 0 0)
-		      #(0 0 2 1 0 1 0)
-		      #(0 1 0 0 1 1 0)
-		      #(0 2 2 1 2 0 0)
-		      #(0 0 1 1 0 1 0)
-		      #(0 0 0 1 0 0 0)
-		      #(0 0 0 0 0 0 0))))
-
-(define filters (list
-		 #(#(#(-1 0 -1)
-		     #(-1 1 -1)
-		     #(-1 0 1))
-		   #(#(0 1 1)
-		     #(0 1 0)
-		     #(0 1 0))
-		   #(#(1 -1 1)
-		     #(0 1 1)
-		     #(-1 0 1)))
-		 #(#(#(1 0 -1)
-		     #(1 -1 -1)
-		     #(1 -1 -1))
-		   #(#(-1 1 0)
-		     #(-1 1 0)
-		     #(-1 -1 -1))
-		   #(#(1 -1 0)
-		     #(0 -1 1)
-		     #(-1 -1 1)))))
-

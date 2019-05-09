@@ -1,12 +1,4 @@
-;; TODO: Generic way to make a layer + give details
-;;; Layers we would want:
-;;     -fully-connected
-;;     -convolutional
-;;     -max-pool
-;;     -dropout
-
-#| for every loss function, need to define dloss |#
-(load "utils.scm")
+(load "load")
 
 (define layer?
   (make-bundle-predicate 'layer))

@@ -1,4 +1,3 @@
-(load "load")
 
 (define layer?
   (make-bundle-predicate 'layer))

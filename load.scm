@@ -19,7 +19,10 @@
         "common/arith"
         "common/numeric-arith"
         "vector-operations"
-        "utils")
+        "utils"
+        "layers"
+        "model"
+        )
       env)))
   (environment-define system-global-environment 'current-book-environment env)
   (ge env))

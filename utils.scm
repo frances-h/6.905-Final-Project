@@ -5,7 +5,7 @@
      (/ -1 (sqrt num-cells))))
 
 (define (generate-initial-weights input-size output-size)
-  (let ((weights (generate-empty-matrix input-size output-size)))
+  (let ((weights (generate-matrix input-size output-size)))
     (let x-loop ((i 0))
       (if (= i input-size) weights
 	  (begin
@@ -198,4 +198,8 @@
 		   #(#(1 -1 0)
 		     #(0 -1 1)
 		     #(-1 -1 1)))))
+
+
+(define (matrix:ones_2d A)
+	(apply generate-matrix (append (get-matrix-dims A) (list 0 1)))) ; (list #layers fill )
 

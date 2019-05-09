@@ -12,7 +12,7 @@
     (let ((layer-outs (list inputs)))
       (for-each (lambda (layer)
 		  (append! layer-outs
-			   (list (layer 'forward (car layer-outs))))) layers)
+			   (list (layer 'forward (last layer-outs))))) layers)
       layer-outs))
 
   (define (forward inputs)
@@ -44,7 +44,9 @@
     (define (get-layers)
       layers)
 
-  (bundle model? forward-layers forward backwards! get-layers))
+   
+
+  (bundle model? forward-layers forward backwards! get-layers ))
 
 
   

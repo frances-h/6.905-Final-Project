@@ -108,6 +108,11 @@
 		  (vector->list b))))
 
 (define (matrix:* a b)
+  (if (number? a) (vector-map (lambda (x)
+				(vector-map (lambda (y)
+					      (* a y))
+					    x))
+			      b)
   (let ((dot-product (generate-matrix (vector-length a)
 				      (vector-length (vector-first b)))))
     (let b-col-loop ((col-index-b 0))
@@ -123,7 +128,7 @@
 					     (get-col-vector col-index-b b)))
 		    (a-row-loop (+ 1 row-index-a)))))
 	    (b-col-loop (+ 1 col-index-b)))))
-    dot-product))
+    dot-product)))
 
 (define (matrix:+ a b)
   ;;; assert shape of a = shape of b
@@ -203,7 +208,7 @@
 	  (begin
 	    (vector-set! sum
 			 row-index
-			 (vector:+ (vector-ref a row-index)
+			 (vector:element_mul (vector-ref a row-index)
 				   (vector-ref b row-index)))
 	    (row-loop (+ 1 row-index)))))
     sum))
@@ -227,8 +232,14 @@
 (define (sigmoid x)
 	(/ (exp x) (+ 1 (exp x))))
 
+(define (dir_sigmoid x)
+	(* (sigmoid x) (- 1 (sigmoid x))))
+
 (define (vector:sigmoid a)
   (vector-map (lambda (x) (sigmoid x )) a ))
+
+(define (vector:dir_sigmoid a)
+  (vector-map (lambda (x) (dir_sigmoid x )) a ))
 
 (define (matrix:sigmoid a)
   (let ((sum (make-vector (vector-length a))))
@@ -242,5 +253,40 @@
 	    (row-loop (+ 1 row-index)))))
     sum))
 
+(define (matrix:dir_sigmoid a)
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:dir_sigmoid (vector-ref a row-index)
+				   ))
+	    (row-loop (+ 1 row-index)))))
+    sum))
+
 (define (bypass x)
 	x)
+
+(define (d_squared-error targets outputs)
+	(matrix:- targets outputs))
+
+(define (matrix-shape A) 
+	(cons (vector-length A) (vector-length (vector-first A))))
+
+(define (ones x) 1)
+
+(define (vector:ones a)
+  (vector-map (lambda (x) (ones x )) a ))
+
+(define (matrix:ones a)
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:ones (vector-ref a row-index)
+				   ))
+	    (row-loop (+ 1 row-index)))))
+    sum))

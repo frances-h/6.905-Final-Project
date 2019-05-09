@@ -11,16 +11,17 @@
 (define layer?
   (make-bundle-predicate 'layer))
 
-(define (make-fully-connected input-size
-			      output-size
-			      use-bias)
+
+
+(define (make-fully-connected input-size output-size use-bias activation_fn d_act_fn)
+
   (let ((weights (generate-initial-weights input-size output-size))
-	(bias (generate-initial-weights output-size 1)))
+  (bias (generate-initial-weights output-size 1)))
 
     (define (forward inputs)
       (if use-bias
-	  (matrix:+ (matrix:* (transpose weights) inputs) bias)
-	  (matrix:*(transpose weights) inputs)))
+    (activation_fn (matrix:+ (matrix:* (transpose weights) inputs) bias))
+    (activation_fn (matrix:*(transpose weights) inputs))))
 
     (define (update-weights! new-weights)
       (set! weights new-weights))
@@ -28,23 +29,16 @@
     (define (update-bias! new-bias)
       (set! bias new-bias))
 
-    (define (print-weights)
-      (newline)
-      (display weights))
+    (define (get-weights)
+      weights)
 
-    (define (print-bias)
-      (newline)
-      (display bias))
+    (define (get-bias)
+      bias)
 
+    (define (d_activation x)
+      (d_act_fn x))
 
-    (bundle layer? forward update-weights! update-bias! print-weights print-bias)))
-
-(define (make-simple-activation-layer input-size activation-func)
-  ;;; activation func must accept an nx1 vector matrix
-  (define (forward inputs)
-    (activation-func inputs))
-
-  (bundle layer? forward))
+    (bundle layer? forward update-weights!  update-bias! get-weights get-bias d_activation)))
 
 
 (define (make-conv2d in-channels
@@ -82,12 +76,10 @@
     (define (update-bias! new-bias)
       (set! bias new-bias))
 
-    (define (print-weights)
-      (newline)
-      (display weights))
+    (define (get-weights)
+      weights)
 
-    (define (print-bias)
-      (newline)
-      (display bias))
+    (define (get-bias)
+      bias)
 
-    (bundle layer? forward update-weights! update-bias! print-weights print-bias)))
+    (bundle layer? forward update-weights!  update-bias! get-weights get-bias)))

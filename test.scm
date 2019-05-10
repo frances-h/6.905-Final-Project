@@ -1,33 +1,54 @@
+
 ;;;
 
 (load "load")
 
 
 (define net (make-model (list
-			 (make-fully-connected 1 4  #t
-					       matrix:sigmoid
-					       matrix:dir_sigmoid)
-			 (make-fully-connected 4 1 #t
+			 (make-fully-connected 1 3  #t
+					       matrix:ReLU
+					       matrix:dir_ReLU)
+			 (make-fully-connected 3 3  #t
+					       matrix:ReLU
+					       matrix:dir_ReLU)
+		
+			 (make-fully-connected 3 1 #t
 					       bypass
 					       matrix:ones_2d)
 
 
 			 )))
 
+(define input_data   #(#(#(1))
+		       #(#(1.5))
+		       #(#(2)) 
+		       #(#(2.5))
+		       #(#(3))
+		       #(#(3.5))
+		       #(#(4 ))))
+
+(define output_data  #(#(#(1))
+		       #(#(2.25))
+		       #(#(4))
+		       #(#(6.25))
+		       #(#(9))
+		       #(#(12.25))
+		       #(#(16))))
+
+(define N (vector-length input_data))
 
 
 
-
-(let training-loop (( i 0))
-  (if (= i 100)
+(let training-loop (( i 0)  (data_num 0)  )
+  (if (= i 10000)
       '()
       (begin
-	(net `backwards! d_squared-error #(#(1)) 
-	     (net `forward-layers #(#(1))) 0.2)
+	(net `backwards! d_squared-error 
+	     (vector-ref output_data data_num)
+	     (net `forward-layers 
+		  (vector-ref input_data data_num) )
+		  0.001)
+	(training-loop (+ i 1) (random N) ))))
 
-	(pp "*************")
-	(pp (net `forward #(#(1))))
-
-	(training-loop (+ i 1)))))
-
-
+(pp "done")
+(vector-map (lambda (i) (net `forward i)) input_data)

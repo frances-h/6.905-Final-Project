@@ -203,3 +203,54 @@
 (define (matrix:ones_2d A)
 	(apply generate-matrix (append (get-matrix-dims A) (list 0 1)))) ; (list #layers fill )
 
+
+
+
+
+
+
+
+;;; ReLU
+
+
+
+(define (ReLU x)
+	(if (> x 0)
+		x
+		0))
+
+(define (dir_ReLU x)
+	(if (> x 0)
+		1
+		0))
+
+(define (vector:ReLU a)
+  (vector-map (lambda (x) (ReLU x )) a ))
+
+(define (vector:dir_ReLU a)
+  (vector-map (lambda (x) (dir_ReLU x )) a ))
+
+(define (matrix:ReLU a)
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:ReLU (vector-ref a row-index)
+				   ))
+	    (row-loop (+ 1 row-index)))))
+    sum))
+
+(define (matrix:dir_ReLU a)
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:dir_ReLU (vector-ref a row-index)
+				   ))
+	    (row-loop (+ 1 row-index)))))
+    sum))
+

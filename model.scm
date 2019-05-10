@@ -23,21 +23,21 @@
       ;;; calculate gradients
 
       (let* ((layer (list-ref layers (- i 1))) 
-            (scaled_errors (matrix:* learning-rate errors))
+            (scaled_errors (transpose (matrix:* learning-rate errors)))
             (cur_layer_outs (list-ref layer-outs i))
+          
             (d_activation_cur_layer_outs (layer `d_activation cur_layer_outs))
             (gradients  (matrix:element_mul scaled_errors d_activation_cur_layer_outs) )
-            (deltas (transpose(matrix:* gradients (transpose (list-ref layer-outs (- i 1)))))))
-
+            (deltas (transpose(matrix:* gradients (transpose (list-ref layer-outs (- i 1))))))
+            (new_errors (matrix:* errors (transpose (layer `get-weights)) )))
 
       (layer `update-weights! (matrix:+ (layer `get-weights) deltas))
       (layer `update-bias! (matrix:+ (layer `get-bias) gradients))
-    )
 
       (if (= i 1) 
         '()
-        (backwards-loop (- i 1) (matrix:* (transpose ((list-ref layers (- i 2)) `get-weights)) errors)))
-      ))
+        (backwards-loop (- i 1) new_errors)
+      ))))
 
  
 

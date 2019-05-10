@@ -5,14 +5,17 @@
 
 
 (define net (make-model (list
-			 (make-fully-connected 1 3  #t
+			 (make-fully-connected 1 6  #t
 					       matrix:ReLU
 					       matrix:dir_ReLU)
-			 (make-fully-connected 3 3  #t
+			 (make-fully-connected 6 6  #t
+					       matrix:ReLU
+					       matrix:dir_ReLU)
+			 (make-fully-connected 6 6  #t
 					       matrix:ReLU
 					       matrix:dir_ReLU)
 		
-			 (make-fully-connected 3 1 #t
+			 (make-fully-connected 6 1 #t
 					       bypass
 					       matrix:ones_2d)
 
@@ -20,27 +23,30 @@
 			 )))
 
 (define input_data   #(#(#(1))
-		       #(#(1.5))
-		       #(#(2)) 
-		       #(#(2.5))
-		       #(#(3))
-		       #(#(3.5))
-		       #(#(4 ))))
-
-(define output_data  #(#(#(1))
-		       #(#(2.25))
+		       #(#(2))
+		       #(#(3)) 
 		       #(#(4))
-		       #(#(6.25))
-		       #(#(9))
-		       #(#(12.25))
-		       #(#(16))))
+		       #(#(5))
+		       #(#(6))
+		       #(#(7 ))))
+
+(define output_data  #(#(#(3))
+		       #(#(2))
+		       #(#(1))
+		       #(#(0))
+		       #(#(1))
+		       #(#(2))
+		       #(#(3))))
 
 (define N (vector-length input_data))
 
 
 
 (let training-loop (( i 0)  (data_num 0)  )
-  (if (= i 10000)
+  (if (= 0 (modulo i 100))
+      (pp i)
+      )
+  (if (= i 1000)
       '()
       (begin
 	(net `backwards! d_squared-error 

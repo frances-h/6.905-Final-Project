@@ -58,3 +58,22 @@
 
 (pp "done")
 (vector-map (lambda (i) (net `forward i)) input_data)
+
+
+(define net (make-model (list
+			 (make-fully-connected 1 6  #t
+					       matrix:ReLU
+					       matrix:dir_ReLU)
+			 (make-fully-connected 6 6  #t
+					       matrix:ReLU
+					       matrix:dir_ReLU)
+			 (make-fully-connected 6 6  #t
+					       matrix:ReLU
+					       matrix:dir_ReLU)
+		
+			 (make-fully-connected 6 1 #t
+					       bypass
+					       matrix:ones_2d)
+
+
+			 )))

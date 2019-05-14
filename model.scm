@@ -22,27 +22,19 @@
    (let backwards-loop ((i (length layers)) (errors (loss-func targets (last layer-outs))))
       ;;; calculate gradients
 
-      (let* ((layer (list-ref layers (- i 1))) 
-            (scaled_errors (transpose (matrix:* learning-rate errors)))
-            (cur_layer_outs (list-ref layer-outs i))
-          
-            (d_activation_cur_layer_outs (layer `d_activation cur_layer_outs))
-            (gradients  (matrix:element_mul scaled_errors d_activation_cur_layer_outs) )
-            (deltas (transpose(matrix:* gradients (transpose (list-ref layer-outs (- i 1))))))
-            (new_errors (matrix:* errors (transpose (layer `get-weights)) )))
+      (let* (
+             (layer (list-ref layers (- i 1))) 
+             (new_errors (layer `layer-backwards! errors learning-rate i layer-outs)))
 
-      (layer `update-weights! (matrix:+ (layer `get-weights) deltas))
-      (layer `update-bias! (matrix:+ (layer `get-bias) gradients))
-
-      (if (= i 1) 
-        '()
-        (backwards-loop (- i 1) new_errors)
+        (if (= i 1) 
+          '()
+          (backwards-loop (- i 1) new_errors)
       ))))
 
  
 
-    (define (get-layers)
-      layers)
+  (define (get-layers)
+    layers)
 
    
 

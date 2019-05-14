@@ -29,7 +29,22 @@
     (define (d_activation x)
       (d_act_fn x))
 
-    (bundle layer? forward update-weights!  update-bias! get-weights get-bias d_activation)))
+    (define (layer-backwards! next-layer-errors learning-rate layer_num layer-outs)
+      (let* ((scaled-errors (transpose (matrix:* learning-rate next-layer-errors)))
+            (cur_layer_outs (list-ref layer-outs layer_num))
+          
+            (d_activation_cur_layer_outs (d_activation cur_layer_outs))
+            (gradients  (matrix:element_mul scaled-errors d_activation_cur_layer_outs) )
+            (deltas (transpose(matrix:* gradients (transpose (list-ref layer-outs (- layer_num 1))))))
+            (new_errors (matrix:* next-layer-errors (transpose weights) ))
+            )
+
+      (set! weights (matrix:+ weights deltas))
+      (set! bias (matrix:+ bias gradients))
+      new_errors
+      ))
+
+    (bundle layer? forward update-weights! update-bias! get-weights get-bias d_activation layer-backwards!)))
 
 
 (define (make-conv2d in-channels
@@ -73,4 +88,6 @@
     (define (get-bias)
       bias)
 
-    (bundle layer? forward update-weights!  update-bias! get-weights get-bias)))
+    
+
+    (bundle layer? forward update-weights!  update-bias! get-weights get-bias layer-backwards!)))

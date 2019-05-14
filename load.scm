@@ -22,6 +22,7 @@
         "utils"
         "layers"
         "model"
+        "loss_fns"
         )
       env)))
   (environment-define system-global-environment 'current-book-environment env)

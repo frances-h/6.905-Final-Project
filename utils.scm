@@ -93,6 +93,27 @@
 (define (sigmoid x)
 	(/ (exp x) (+ 1 (exp x))))
 
+(define (sgn x)
+	(cond ((> x 0) 1)
+		  ((< x 0) -1)
+		  (else 0)
+))
+
+(define (vector:sgn a)
+  (vector-map (lambda (x) (sgn x )) a ))
+
+(define (matrix:sgn a)
+  (let ((sum (make-vector (vector-length a))))
+    (let row-loop ((row-index 0))
+      (if (= row-index (vector-length a)) #t
+	  (begin
+	    (vector-set! sum
+			 row-index
+			 (vector:sgn (vector-ref a row-index)
+				   ))
+	    (row-loop (+ 1 row-index)))))
+    sum))
+
 (define (dir_sigmoid x)
 	(* (sigmoid x) (- 1 (sigmoid x))))
 
@@ -129,9 +150,6 @@
 (define (bypass x)
 	x)
 
-
-(define (d_squared-error targets outputs)
-	(matrix:- targets outputs))
 
 (define a #(#(0 1 1 1 0 0 0)
 	    #(0 0 1 1 1 0 0)
@@ -223,6 +241,8 @@
 	(if (> x 0)
 		1
 		0))
+
+
 
 (define (vector:ReLU a)
   (vector-map (lambda (x) (ReLU x )) a ))

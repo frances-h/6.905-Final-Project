@@ -31,12 +31,10 @@
           (backwards-loop (- i 1) new_errors)
       ))))
 
- 
 
   (define (get-layers)
     layers)
 
-   
 
   (bundle model? forward-layers forward backwards! get-layers ))
 

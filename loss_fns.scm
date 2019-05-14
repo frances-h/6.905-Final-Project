@@ -1,10 +1,8 @@
 
 
-; A single instance of MSE Loss
+(define (d_squared-error targets outputs)
+	(matrix:- targets outputs))
 
 
-(define (SE_Loss input target)
- 		(* (- input target) (- input target)))
-
-(define (SE_Loss_dir input target)
- 		(* 2 (- input target)))
+(define (d_absolute-error targets outputs)
+	(matrix:sgn (matrix:- targets outputs)))

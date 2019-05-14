@@ -88,6 +88,7 @@
     (define (get-bias)
       bias)
 
-    
+    (define (layer-backwards!)
+      '())
 
     (bundle layer? forward update-weights!  update-bias! get-weights get-bias layer-backwards!)))
